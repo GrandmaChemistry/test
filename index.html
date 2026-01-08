@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>化学游戏中心 | WONG</title>
+    <!-- 1. 引入 Authing SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@authing/web/dist/authing-web-sdk.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -46,6 +48,78 @@
             max-width: 800px;
             margin: 0 auto;
             line-height: 1.6;
+        }
+        
+        /* 用户信息面板样式 */
+        .user-panel {
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            padding: 15px 25px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            display: inline-block;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .user-avatar {
+            font-size: 2.5rem;
+        }
+        
+        .user-name {
+            color: #ffd700;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .user-stats {
+            color: #bbbbff;
+            font-size: 0.9rem;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        /* 登录按钮样式 */
+        .login-btn {
+            padding: 12px 35px;
+            background: linear-gradient(45deg, #09bb07, #07a506);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(9, 187, 7, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(9, 187, 7, 0.4);
+        }
+        
+        .login-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .games-grid {
@@ -194,6 +268,21 @@
             color: #bbbbff;
         }
         
+        .welcome-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #09bb07, #07a506);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 1001;
+            box-shadow: 0 5px 20px rgba(9, 187, 7, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
         @media (max-width: 768px) {
             .games-grid {
                 grid-template-columns: 1fr;
@@ -207,6 +296,12 @@
                 flex-direction: column;
                 gap: 20px;
             }
+            
+            .welcome-message {
+                left: 20px;
+                right: 20px;
+                top: 10px;
+            }
         }
     </style>
 </head>
@@ -214,25 +309,12 @@
     <div class="container">
         <header>
             <h1>🔬 化学游戏中心</h1>
-            <div style="margin-top: 20px;">
-                <button onclick="showWechatLogin()" 
-                        style="padding: 10px 25px; 
-                               background: linear-gradient(45deg, #09bb07, #09bb07); 
-                               color: white; 
-                               border: none; 
-                               border-radius: 25px; 
-                               font-size: 1rem; 
-                               cursor: pointer;
-                               display: flex;
-                               align-items: center;
-                               gap: 10px;
-                               margin: 0 auto;">
-                    <span style="font-size: 1.2rem;">💬</span> 微信登录
-                </button>
-                <p style="margin-top: 10px; color: #bbbbff; font-size: 0.9rem;">
-                    登录后可保存游戏进度，获得学习徽章
-                </p>
+            
+            <!-- 2. 登录状态显示区域 -->
+            <div id="login-container">
+                <!-- 这里的内容将由JavaScript动态生成 -->
             </div>
+            
             <p class="subtitle">通过有趣的游戏学习化学知识，让化学学习变得生动有趣！包含离子反应、晶体结构和原子构造原理等核心概念。</p>
         </header>
         
@@ -251,6 +333,7 @@
             </div>
         </div>
         
+        <!-- 3. 您的游戏网格 - 这里保留了您原来的游戏内容 -->
         <div class="games-grid">
             <!-- 离子消消乐 -->
             <div class="game-card">
@@ -326,7 +409,6 @@
                 <div class="game-preview" style="background: linear-gradient(135deg, #FF9800, #E91E63);">
                     <div class="preview-overlay">
                         <button class="play-btn" onclick="window.open('https://crystavoid.vercel.app/', '_blank')">开始游戏</button>
-                        <!-- https://venerable-piroshki-eb5d8f.netlify.app/ -->
                     </div>
                 </div>
                 <div class="game-info">
@@ -351,7 +433,6 @@
                 <div class="game-preview" style="background: linear-gradient(135deg, #00BCD4, #8BC34A);">
                     <div class="preview-overlay">
                         <button class="play-btn" onclick="window.open('https://usautodeploy-crystalvoidexplorer30-hxntv4.deployai365.com/', '_blank')">开始游戏</button>
-                        <!-- https://storied-tapioca-cddeaa.netlify.app/ -->
                     </div>
                 </div>
                 <div class="game-info">
@@ -376,7 +457,6 @@
                 <div class="game-preview" style="background: linear-gradient(135deg, #FF3D00, #2979FF);">
                     <div class="preview-overlay">
                         <button class="play-btn" onclick="window.open('https://usautodeploy-ironnebula-ng6541.deployai365.com/', '_blank')">开始探索</button>
-                        <!-- https://ironnebula.netlify.app/ -->
                     </div>
                 </div>
                 <div class="game-info">
@@ -397,212 +477,329 @@
             </div>
         </div>
         
-        <div class="add-game">
-            <h3 style="text-align: center; color: #ffd700; margin: 40px 0 20px;">更多游戏正在开发中...</h3>
-            <p style="text-align: center; color: #bbbbff; max-width: 600px; margin: 0 auto;">
-                计划中的游戏：化学方程式配平、分子模型搭建、元素周期表探险、化学反应模拟等。
-                欢迎提出你的创意！
-            </p>
-        </div>
-        
-        <!-- 微信登录弹出窗口 -->
-        <div id="wechatLoginModal" style="display: none; 
-                                          position: fixed; 
-                                          top: 0; 
-                                          left: 0; 
-                                          width: 100%; 
-                                          height: 100%; 
-                                          background: rgba(0, 0, 0, 0.8); 
-                                          z-index: 1000; 
-                                          align-items: center; 
-                                          justify-content: center;">
-            <div style="background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%); 
-                        padding: 40px; 
-                        border-radius: 15px; 
-                        text-align: center; 
-                        max-width: 400px; 
-                        width: 90%; 
-                        border: 2px solid #ffd700; 
-                        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);">
-                <h2 style="color: #ffd700; margin-bottom: 20px;">微信登录</h2>
-                
-                <!-- 模拟微信二维码 -->
-                <div style="background: white; 
-                            padding: 20px; 
-                            border-radius: 10px; 
-                            display: inline-block; 
-                            margin: 20px 0;">
-                    <div style="width: 200px; 
-                                height: 200px; 
-                                background: linear-gradient(45deg, #f0f0f0, #e0e0e0); 
-                                display: flex; 
-                                align-items: center; 
-                                justify-content: center; 
-                                border: 1px dashed #ccc;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 3rem; color: #09bb07;">💬</div>
-                            <p style="color: #666; margin-top: 10px; font-size: 0.9rem;">微信扫描二维码</p>
-                            <p style="color: #999; font-size: 0.8rem;">或点击下方按钮</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <p style="color: #bbbbff; margin: 20px 0;">
-                    使用微信扫描二维码登录<br>
-                    或在手机上点击授权登录
-                </p>
-                
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="simulateLogin()" 
-                            style="padding: 10px 30px; 
-                                   background: linear-gradient(45deg, #09bb07, #07a506); 
-                                   color: white; 
-                                   border: none; 
-                                   border-radius: 20px; 
-                                   font-size: 1rem; 
-                                   cursor: pointer;">
-                        模拟登录
-                    </button>
-                    <button onclick="hideWechatLogin()" 
-                            style="padding: 10px 30px; 
-                                   background: transparent; 
-                                   color: #bbbbff; 
-                                   border: 1px solid #bbbbff; 
-                                   border-radius: 20px; 
-                                   font-size: 1rem; 
-                                   cursor: pointer;">
-                        取消
-                    </button>
-                </div>
-                
-                <p style="margin-top: 20px; color: #8888cc; font-size: 0.8rem;">
-                    登录后可以保存您的游戏进度和学习记录
-                </p>
-            </div>
-        </div>
-        
-        <!-- 登录成功提示 -->
-        <div id="loginSuccess" style="display: none; 
-                                      position: fixed; 
-                                      top: 20px; 
-                                      right: 20px; 
-                                      background: rgba(9, 187, 7, 0.9); 
-                                      color: white; 
-                                      padding: 15px 25px; 
-                                      border-radius: 10px; 
-                                      z-index: 1001;">
-            <span style="font-weight: bold;">✓</span> 登录成功！欢迎回来！
-        </div>
-        
         <footer>
             <p>© 2024 WONG的化学游戏中心 | 通过游戏让化学学习更有趣！</p>
             <p style="margin-top: 10px; font-size: 0.9rem;">
                 所有游戏均基于HTML5/CSS3/JavaScript开发，无需安装插件
             </p>
             <p style="margin-top: 10px; font-size: 0.8rem; color: #6666cc;">
-                注：部分游戏可能需要VPN访问，请根据提示选择合适版本
+                使用 Authing 提供安全的身份认证服务
             </p>
         </footer>
     </div>
-    
+
+    <!-- 4. JavaScript 代码 - 已配置好您的 App ID 和域名 -->
     <script>
-        // 添加一些交互效果
-        document.addEventListener('DOMContentLoaded', function() {
-            // 卡片进入动画
-            const cards = document.querySelectorAll('.game-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(30px)';
-                
-                setTimeout(() => {
-                    card.style.transition = 'all 0.5s ease';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 200);
-            });
-            
-            // 添加点击统计
-            document.querySelectorAll('.play-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // 这里可以添加游戏启动统计
-                    console.log('游戏启动');
-                });
-            });
-        });
+    // ==================== 配置信息 (已填写好!) ====================
+    const AUTHING_CONFIG = {
+        appId: "695f0afe3f11be56dbcfe03b",  // 您的 App ID
+        host: "https://wong.authing.cn",     // 您的域名
+        redirectUri: window.location.origin, // 自动获取当前网站地址
+        scope: "openid profile"
+    };
+    
+    // ==================== 全局变量 ====================
+    let authing = null;
+    let currentUser = null;
+    
+    // ==================== 主函数 ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('化学游戏中心加载中...');
+        initAuthing();
+        checkLoginStatus();
+        initGameCards();
+    });
+    
+    // ==================== 初始化 Authing ====================
+    function initAuthing() {
+        try {
+            authing = new AuthingWeb(AUTHING_CONFIG);
+            console.log('✅ Authing 初始化成功');
+        } catch (error) {
+            console.error('❌ Authing 初始化失败:', error);
+            showErrorState('身份服务初始化失败，使用演示模式');
+            showDemoLogin();
+        }
+    }
+    
+    // ==================== 检查登录状态 ====================
+    function checkLoginStatus() {
+        // 从本地存储读取用户信息
+        const savedUser = localStorage.getItem('chem_game_user');
+        if (savedUser) {
+            try {
+                currentUser = JSON.parse(savedUser);
+                showUserPanel();
+                return;
+            } catch (e) {
+                console.error('读取用户信息失败:', e);
+                localStorage.removeItem('chem_game_user');
+            }
+        }
+        showLoginButton();
+    }
+    
+    // ==================== 显示登录按钮 ====================
+    function showLoginButton() {
+        const container = document.getElementById('login-container');
+        container.innerHTML = `
+            <div style="text-align: center;">
+                <button id="wechat-login-btn" class="login-btn">
+                    <span style="font-size: 1.4rem;">💬</span>
+                    <span>微信登录</span>
+                </button>
+                <p style="margin-top: 10px; color: #bbbbff; font-size: 0.9rem;">
+                    登录后保存游戏进度，解锁学习徽章！
+                </p>
+                <p style="margin-top: 5px; color: #8888cc; font-size: 0.8rem;">
+                    使用 Authing 安全认证
+                </p>
+            </div>
+        `;
         
-        // 显示微信登录窗口
-        function showWechatLogin() {
-            document.getElementById('wechatLoginModal').style.display = 'flex';
+        // 绑定登录按钮事件
+        const loginBtn = document.getElementById('wechat-login-btn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', handleWechatLogin);
+        }
+    }
+    
+    // ==================== 显示用户面板 ====================
+    function showUserPanel() {
+        if (!currentUser) {
+            showLoginButton();
+            return;
         }
         
-        // 隐藏微信登录窗口
-        function hideWechatLogin() {
-            document.getElementById('wechatLoginModal').style.display = 'none';
-        }
-        
-        // 模拟登录功能
-        function simulateLogin() {
-            // 隐藏登录窗口
-            hideWechatLogin();
-            
-            // 显示成功提示
-            const successMsg = document.getElementById('loginSuccess');
-            successMsg.style.display = 'block';
-            
-            // 3秒后隐藏成功提示
-            setTimeout(() => {
-                successMsg.style.display = 'none';
-            }, 3000);
-            
-            // 更新页面上的登录状态
-            updateLoginStatus(true);
-            
-            // 可以在这里添加实际的登录逻辑
-            console.log('用户已登录');
-        }
-        
-        // 更新登录状态
-        function updateLoginStatus(isLoggedIn) {
-            const loginBtn = document.querySelector('button[onclick="showWechatLogin()"]');
-            const header = document.querySelector('header');
-            
-            if (isLoggedIn) {
-                // 更改按钮为已登录状态
-                if (loginBtn) {
-                    loginBtn.innerHTML = '<span style="font-size: 1.2rem;">👤</span> 已登录';
-                    loginBtn.style.background = 'linear-gradient(45deg, #666, #444)';
-                    loginBtn.onclick = function() {
-                        showUserMenu();
-                    };
-                }
-                
-                // 在标题旁显示用户信息
-                const userInfo = document.createElement('div');
-                userInfo.innerHTML = `
-                    <div style="position: absolute; top: 20px; right: 20px; text-align: right;">
-                        <p style="color: #ffd700; font-size: 0.9rem;">👤 老奶奶用户</p>
-                        <p style="color: #bbbbff; font-size: 0.8rem;">学习进度: 60%</p>
+        const container = document.getElementById('login-container');
+        container.innerHTML = `
+            <div class="user-panel">
+                <div class="user-header">
+                    <div class="user-avatar">${currentUser.photo ? 
+                        `<img src="${currentUser.photo}" style="width: 40px; height: 40px; border-radius: 50%;">` : 
+                        '👵'}</div>
+                    <div>
+                        <div class="user-name">${currentUser.nickname || '化学探索者'}</div>
+                        <div class="user-stats">
+                            <span>🎮 游戏进度: 3/6</span>
+                            <span style="margin-left: 15px;">⭐ 获得徽章: 2</span>
+                        </div>
                     </div>
-                `;
-                header.style.position = 'relative';
-                if (!document.querySelector('.user-info')) {
-                    userInfo.className = 'user-info';
-                    header.appendChild(userInfo);
+                </div>
+                <button class="logout-btn" onclick="handleLogout()">
+                    退出登录
+                </button>
+            </div>
+        `;
+    }
+    
+    // ==================== 处理微信登录 ====================
+    async function handleWechatLogin() {
+        if (!authing) {
+            alert('登录服务准备中，请稍候重试');
+            return;
+        }
+        
+        const btn = document.getElementById('wechat-login-btn');
+        if (btn) {
+            btn.innerHTML = '<span>正在连接...</span>';
+            btn.disabled = true;
+        }
+        
+        try {
+            // 跳转到微信登录授权页面
+            await authing.social.authorize('wechat', {
+                onSuccess: (user) => {
+                    console.log('登录成功:', user);
+                    handleLoginSuccess(user);
+                },
+                onError: (error) => {
+                    console.error('登录失败:', error);
+                    alert('微信登录失败，您可以先使用演示模式体验');
+                    showDemoLogin();
                 }
-            }
+            });
+        } catch (error) {
+            console.error('登录过程出错:', error);
+            alert('登录过程出错，请检查网络或使用演示模式');
+            showDemoLogin();
+        }
+    }
+    
+    // ==================== 登录成功处理 ====================
+    function handleLoginSuccess(user) {
+        // 保存用户信息
+        currentUser = {
+            id: user.id || user.openid || ('user_' + Date.now()),
+            nickname: user.nickname || '化学爱好者',
+            photo: user.photo || user.avatar || '',
+            loginTime: new Date().toLocaleString()
+        };
+        
+        // 存储到本地
+        localStorage.setItem('chem_game_user', JSON.stringify(currentUser));
+        
+        // 更新界面
+        showUserPanel();
+        
+        // 显示欢迎消息
+        showWelcomeMessage();
+        
+        console.log('🎉 用户登录成功:', currentUser.nickname);
+    }
+    
+    // ==================== 显示欢迎消息 ====================
+    function showWelcomeMessage() {
+        // 移除可能存在的旧消息
+        const oldMsg = document.querySelector('.welcome-message');
+        if (oldMsg) oldMsg.remove();
+        
+        const welcomeMsg = document.createElement('div');
+        welcomeMsg.className = 'welcome-message';
+        welcomeMsg.innerHTML = `
+            <span style="font-size: 1.5rem;">🎉</span>
+            <div>
+                <div style="font-weight: bold;">欢迎回来！</div>
+                <div style="font-size: 0.9rem;">${currentUser.nickname}，继续您的化学探索之旅吧！</div>
+            </div>
+        `;
+        
+        // 添加动画样式
+        const styleId = 'welcome-animation-style';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100px); opacity: 0; }
+                }
+                .welcome-message {
+                    animation: slideInRight 0.5s ease forwards;
+                }
+                .welcome-message.hiding {
+                    animation: slideOutRight 0.5s ease forwards;
+                }
+            `;
+            document.head.appendChild(style);
         }
         
-        // 显示用户菜单
-        function showUserMenu() {
-            alert('用户菜单：\n• 查看学习进度\n• 获得的徽章\n• 设置\n• 退出登录');
-        }
+        document.body.appendChild(welcomeMsg);
         
-        // 点击模态框外部关闭
-        document.getElementById('wechatLoginModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideWechatLogin();
-            }
+        // 3秒后淡出并移除
+        setTimeout(() => {
+            welcomeMsg.classList.add('hiding');
+            setTimeout(() => {
+                if (welcomeMsg.parentNode) {
+                    welcomeMsg.remove();
+                }
+            }, 500);
+        }, 3000);
+    }
+    
+    // ==================== 处理退出登录 ====================
+    function handleLogout() {
+        if (confirm('确定要退出登录吗？您的游戏进度已保存在本地。')) {
+            currentUser = null;
+            localStorage.removeItem('chem_game_user');
+            showLoginButton();
+            
+            // 简单提示
+            alert('已退出登录，欢迎下次再来！');
+        }
+    }
+    
+    // ==================== 演示模式 ====================
+    function showDemoLogin() {
+        const container = document.getElementById('login-container');
+        container.innerHTML = `
+            <div style="text-align: center;">
+                <button onclick="demoLogin()" class="login-btn" style="background: linear-gradient(45deg, #FF9800, #FF5722);">
+                    <span style="font-size: 1.4rem;">👵</span>
+                    <span>体验演示模式</span>
+                </button>
+                <p style="margin-top: 10px; color: #ff9800; font-size: 0.9rem;">
+                    演示模式下数据保存在本机，更换设备会丢失哦
+                </p>
+                <p style="margin-top: 5px; color: #8888cc; font-size: 0.8rem;">
+                    配置微信登录后体验完整功能
+                </p>
+            </div>
+        `;
+    }
+    
+    function demoLogin() {
+        currentUser = {
+            id: 'demo_user_' + Math.random().toString(36).substr(2, 9),
+            nickname: '化学奶奶（演示）',
+            photo: '',
+            loginTime: new Date().toLocaleString()
+        };
+        
+        localStorage.setItem('chem_game_user', JSON.stringify(currentUser));
+        showUserPanel();
+        showWelcomeMessage();
+        alert('演示模式登录成功！\n要使用微信登录，请确保已正确配置Authing回调地址。');
+    }
+    
+    // ==================== 错误状态显示 ====================
+    function showErrorState(message) {
+        const container = document.getElementById('login-container');
+        container.innerHTML = `
+            <div style="text-align: center; color: #ff6b6b; padding: 10px;">
+                <p>⚠️ ${message}</p>
+                <button onclick="location.reload()" style="padding: 8px 20px; margin-top: 10px; background: #666; color: white; border: none; border-radius: 15px;">
+                    刷新页面
+                </button>
+            </div>
+        `;
+    }
+    
+    // ==================== 游戏卡片动画 ====================
+    function initGameCards() {
+        const cards = document.querySelectorAll('.game-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 150);
         });
+        
+        // 记录游戏点击
+        document.querySelectorAll('.play-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (currentUser) {
+                    console.log(`用户 ${currentUser.nickname} 启动了游戏`);
+                    // 这里可以添加游戏统计代码
+                }
+            });
+        });
+    }
+    
+    // ==================== 配置检查 ====================
+    function checkConfig() {
+        // 检查回调地址是否配置正确
+        const currentUrl = window.location.origin;
+        console.log('当前网站地址:', currentUrl);
+        console.log('Authing配置:', AUTHING_CONFIG);
+        
+        // 如果当前不是本地地址，给出提示
+        if (!currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1')) {
+            console.log('提示：请确保Authing回调地址中包含: ' + currentUrl);
+        }
+    }
+    
+    // 页面加载完成后检查配置
+    setTimeout(checkConfig, 2000);
+    
     </script>
 </body>
 </html>
