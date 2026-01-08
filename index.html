@@ -4,7 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>化学游戏中心 | WONG</title>
+    
+    <!-- 主要Authing SDK (国内CDN，稳定性高) -->
+    <script src="https://cdn.authing.co/packages/web/5.1.9/umd/index.min.js"></script>
+    
+    <!-- 备用加载机制：如果第一个CDN失败，3秒后自动加载第二个 -->
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (typeof AuthingWeb === 'undefined') {
+                    console.log('主要CDN加载失败，尝试备用CDN...');
+                    var backupScript = document.createElement('script');
+                    backupScript.src = 'https://cdn.jsdelivr.net/npm/@authing/web/dist/authing-web-sdk.umd.min.js';
+                    backupScript.onload = function() {
+                        console.log('✅ 备用CDN加载成功');
+                        // 触发重新初始化
+                        if (window.authingInitRetry) {
+                            window.authingInitRetry();
+                        }
+                    };
+                    document.head.appendChild(backupScript);
+                }
+            }, 3000);
+        });
+    </script>
+
     <style>
+        /* ========== 基础样式 ========== */
         * {
             margin: 0;
             padding: 0;
@@ -16,53 +42,109 @@
             background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
             color: white;
             min-height: 100vh;
+            padding: 10px;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
         }
         
+        /* ========== 页头与登录区域 ========== */
         header {
             text-align: center;
-            padding: 40px 0;
+            padding: 30px 20px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 15px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             position: relative;
+            border: 1px solid rgba(255, 215, 0, 0.2);
         }
         
         h1 {
-            font-size: 3rem;
+            font-size: 2.8rem;
             color: #ffd700;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
         }
         
         .subtitle {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #bbbbff;
             max-width: 800px;
-            margin: 0 auto;
+            margin: 0 auto 25px;
             line-height: 1.6;
         }
         
-        /* 用户面板样式 */
+        /* 登录状态区域 */
+        #login-container {
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        /* 通用按钮样式 */
+        .btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+        
+        .btn-success {
+            background: linear-gradient(45deg, #4CAF50, #2E7D32);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+        }
+        
+        /* 用户信息面板 */
         .user-panel {
             background: rgba(255, 215, 0, 0.1);
             border-radius: 15px;
-            padding: 20px 30px;
+            padding: 25px 30px;
             border: 1px solid rgba(255, 215, 0, 0.3);
-            display: inline-block;
-            margin: 20px 0;
             text-align: center;
-            min-width: 300px;
+            max-width: 400px;
+            width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .user-avatar {
-            font-size: 3rem;
-            margin-bottom: 10px;
+            font-size: 3.5rem;
+            margin-bottom: 15px;
         }
         
         .user-name {
@@ -74,15 +156,15 @@
         
         .user-email {
             color: #bbbbff;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
         }
         
         .user-stats {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin: 15px 0;
+            gap: 25px;
+            margin: 20px 0;
         }
         
         .stat-item {
@@ -91,134 +173,68 @@
         
         .stat-number {
             color: #ffd700;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
+            display: block;
         }
         
         .stat-label {
             color: #bbbbff;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            margin-top: 5px;
         }
         
-        /* 按钮样式 */
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-            margin: 5px;
+        /* 状态提示 */
+        .status-message {
+            text-align: center;
+            padding: 25px;
+            color: #bbbbff;
         }
         
-        .btn-primary {
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-            color: white;
-            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
-        }
-        
-        .btn-success {
-            background: linear-gradient(45deg, #4CAF50, #2E7D32);
-            color: white;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-        }
-        
-        .btn-warning {
-            background: linear-gradient(45deg, #FF9800, #F57C00);
-            color: white;
-            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(45deg, #f44336, #d32f2f);
-            color: white;
-            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
-        }
-        
-        /* 登录弹窗 */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .modal-content {
-            background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
-            padding: 40px;
-            border-radius: 20px;
-            border: 2px solid rgba(255, 215, 0, 0.5);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            max-width: 400px;
-            width: 90%;
-            position: relative;
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #ffd700;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
+        .status-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
             display: block;
+        }
+        
+        .status-text {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
             color: #ffd700;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
         }
         
-        .form-input {
-            width: 100%;
-            padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 215, 0, 0.3);
+        /* ========== 游戏内容区域 (您原有的样式) ========== */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
             border-radius: 10px;
-            color: white;
-            font-size: 1rem;
+            margin: 30px 0;
+            flex-wrap: wrap;
         }
         
-        .form-input:focus {
-            outline: none;
-            border-color: #ffd700;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        .stat {
+            text-align: center;
+            padding: 10px;
+            min-width: 120px;
         }
         
-        /* 游戏相关样式保持不变 */
+        .stat-number {
+            font-size: 2.2rem;
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #bbbbff;
+        }
+        
         .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 25px;
             margin: 40px 0;
         }
         
@@ -286,7 +302,7 @@
         }
         
         .game-title {
-            font-size: 1.8rem;
+            font-size: 1.7rem;
             color: #ffd700;
             margin-bottom: 10px;
             display: flex;
@@ -314,7 +330,7 @@
         .tag {
             background: rgba(255, 215, 0, 0.2);
             color: #ffd700;
-            padding: 4px 12px;
+            padding: 5px 12px;
             border-radius: 15px;
             font-size: 0.85rem;
         }
@@ -329,71 +345,33 @@
             color: #4CAF50;
         }
         
+        /* ========== 页脚 ========== */
         footer {
             text-align: center;
-            padding: 30px;
+            padding: 30px 20px;
             margin-top: 50px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             color: #8888cc;
-        }
-        
-        .stats-bar {
-            display: flex;
-            justify-content: space-around;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 30px 0;
-        }
-        
-        .stat {
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2rem;
-            color: #ffd700;
-            font-weight: bold;
-        }
-        
-        .stat-label {
             font-size: 0.9rem;
+        }
+        
+        footer a {
             color: #bbbbff;
+            text-decoration: none;
         }
         
-        .welcome-message {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(45deg, #4CAF50, #2E7D32);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            z-index: 1001;
-            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideIn 0.5s ease forwards;
+        footer a:hover {
+            text-decoration: underline;
         }
         
-        @keyframes slideIn {
-            from { transform: translateX(100px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100px); opacity: 0; }
-        }
-        
+        /* 响应式设计 */
         @media (max-width: 768px) {
-            .games-grid {
-                grid-template-columns: 1fr;
-            }
-            
             h1 {
                 font-size: 2.2rem;
+            }
+            
+            .games-grid {
+                grid-template-columns: 1fr;
             }
             
             .stats-bar {
@@ -401,10 +379,28 @@
                 gap: 20px;
             }
             
-            .welcome-message {
-                left: 20px;
-                right: 20px;
-                top: 10px;
+            .btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+            }
+            
+            .user-stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
             }
         }
     </style>
@@ -414,14 +410,20 @@
         <header>
             <h1>🔬 化学游戏中心</h1>
             
-            <!-- 登录状态显示区域 -->
+            <!-- 核心：登录状态动态显示区域 -->
             <div id="login-container">
                 <!-- 这里的内容将由JavaScript动态生成 -->
+                <div class="status-message">
+                    <span class="status-icon">⏳</span>
+                    <div class="status-text">正在初始化登录服务...</div>
+                    <div>请稍候，这需要几秒钟时间</div>
+                </div>
             </div>
             
             <p class="subtitle">通过有趣的游戏学习化学知识，让化学学习变得生动有趣！包含离子反应、晶体结构和原子构造原理等核心概念。</p>
         </header>
         
+        <!-- 网站数据统计栏 -->
         <div class="stats-bar">
             <div class="stat">
                 <div class="stat-number">6</div>
@@ -437,7 +439,7 @@
             </div>
         </div>
         
-        <!-- 您的游戏网格 - 保持原样 -->
+        <!-- 游戏网格 -->
         <div class="games-grid">
             <!-- 离子消消乐 -->
             <div class="game-card">
@@ -508,113 +510,346 @@
                 </div>
             </div>
             
-            <!-- 其他游戏卡片保持不变... -->
+            <!-- 新游戏1：晶体空隙VPN版 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #FF9800, #E91E63);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('https://crystavoid.vercel.app/', '_blank')">开始游戏</button>
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">🧊</span> 晶体空隙探索
+                    </h2>
+                    <p class="game-description">
+                        深入探索面心立方和体心立方晶胞中的四面体空隙和八面体空隙！通过交互式3D模型，直观理解晶体空隙的位置、数量和几何特征。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">晶体结构</span>
+                        <span class="tag">空隙分析</span>
+                        <span class="tag">3D可视化</span>
+                        <span class="tag">晶胞几何</span>
+                        <span class="tag tag-vpn">需要VPN</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新游戏2：晶体空隙国内版 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #00BCD4, #8BC34A);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('https://usautodeploy-crystalvoidexplorer30-hxntv4.deployai365.com/', '_blank')">开始游戏</button>
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">🔍</span> 晶体空隙实验室
+                    </h2>
+                    <p class="game-description">
+                        国内可直接访问的晶体空隙探索工具！研究面心立方和体心立方晶胞中的空隙分布，学习空隙的位置、大小和对材料性能的影响。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">晶体学</span>
+                        <span class="tag">材料科学</span>
+                        <span class="tag">空隙分析</span>
+                        <span class="tag">交互式学习</span>
+                        <span class="tag tag-domestic">国内访问</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新游戏3：铁原子电子云交互式教学平台 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #FF3D00, #2979FF);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('https://usautodeploy-ironnebula-ng6541.deployai365.com/', '_blank')">开始探索</button>
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">☁️</span> 铁原子电子云
+                    </h2>
+                    <p class="game-description">
+                        探索铁原子的电子云分布！通过交互式3D可视化，观察铁原子不同能级的电子云形状、密度和空间分布，理解量子力学中的电子云概念。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">电子云</span>
+                        <span class="tag">量子力学</span>
+                        <span class="tag">3D可视化</span>
+                        <span class="tag">铁原子</span>
+                        <span class="tag">交互式教学</span>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <footer>
             <p>© 2024 WONG的化学游戏中心 | 通过游戏让化学学习更有趣！</p>
-            <p style="margin-top: 10px; font-size: 0.9rem;">
+            <p style="margin-top: 8px; font-size: 0.85rem;">
                 所有游戏均基于HTML5/CSS3/JavaScript开发，无需安装插件
             </p>
-            <p style="margin-top: 10px; font-size: 0.8rem; color: #6666cc;">
-                本地登录系统 - 数据安全保存在您的设备中
+            <p style="margin-top: 8px; font-size: 0.8rem; color: #6666cc;">
+                用户认证由 <a href="https://authing.cn" target="_blank">Authing</a> 提供 | 
+                网站地址：<code>https://grandmachemistry.github.io/test/</code>
             </p>
+            <!-- 这里未来可以添加一个动态的访问量徽章 -->
         </footer>
     </div>
-    
-    <!-- 登录弹窗 -->
-    <div id="loginModal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeModal()">×</button>
-            <h2 style="color: #ffd700; text-align: center; margin-bottom: 30px;">登录 / 注册</h2>
-            
-            <form id="loginForm" onsubmit="return handleLogin(event)">
-                <div class="form-group">
-                    <label class="form-label">您的昵称</label>
-                    <input type="text" class="form-input" id="nickname" 
-                           placeholder="例如：化学奶奶" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">邮箱地址（可选）</label>
-                    <input type="email" class="form-input" id="email" 
-                           placeholder="example@email.com">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">选择头像</label>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button type="button" class="avatar-btn" data-emoji="👵" onclick="selectAvatar('👵')">👵</button>
-                        <button type="button" class="avatar-btn" data-emoji="👩‍🔬" onclick="selectAvatar('👩‍🔬')">👩‍🔬</button>
-                        <button type="button" class="avatar-btn" data-emoji="👨‍🔬" onclick="selectAvatar('👨‍🔬')">👨‍🔬</button>
-                        <button type="button" class="avatar-btn" data-emoji="🧑‍🎓" onclick="selectAvatar('🧑‍🎓')">🧑‍🎓</button>
-                        <button type="button" class="avatar-btn" data-emoji="🤖" onclick="selectAvatar('🤖')">🤖</button>
-                    </div>
-                    <input type="hidden" id="selectedAvatar" value="👵">
-                </div>
-                
-                <div style="text-align: center; margin-top: 30px;">
-                    <button type="submit" class="btn btn-success" style="width: 100%;">
-                        <span style="font-size: 1.2rem;">🔐</span> 立即登录 / 注册
-                    </button>
-                    <p style="color: #bbbbff; font-size: 0.9rem; margin-top: 15px;">
-                        数据将保存在您的设备本地，安全可靠
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
 
+    <!-- ==================== JavaScript 逻辑核心 ==================== -->
     <script>
-    // ==================== 本地用户管理系统 ====================
-    let currentUser = null;
+    // ==================== 1. 核心配置（根据您的情况已经填好）====================
+    const AUTHING_CONFIG = {
+        // 您的App ID
+        appId: "695f0afe3f11be56dbcfe03b",
+        // 您的Authing域名
+        host: "https://wong.authing.cn",
+        // !!! 最关键的回调地址，必须与Authing控制台设置完全一致 !!!
+        redirectUri: "https://grandmachemistry.github.io/test/",
+        scope: "openid profile email phone"
+    };
     
-    // 页面加载完成
+    // ==================== 2. 全局变量 ====================
+    let authing = null;
+    let currentUser = null;
+    let isAuthingReady = false;
+    let initializationAttempts = 0;
+    const MAX_INIT_ATTEMPTS = 3;
+    
+    // ==================== 3. 页面加载初始化 ====================
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('化学游戏中心 - 本地登录版 已加载');
-        checkLoginStatus();
+        console.log('🧪 化学游戏中心启动');
+        console.log('📍 当前网站地址:', window.location.href);
+        console.log('🎯 配置的回调地址:', AUTHING_CONFIG.redirectUri);
+        
+        // 检查本地是否有已登录用户
+        checkLocalUser();
+        
+        // 延迟一点初始化Authing，给SDK加载时间
+        setTimeout(initializeAuthing, 1500);
+        
+        // 初始化游戏卡片动画
         initGameCards();
-        initAvatarButtons();
     });
     
-    // 检查登录状态
-    function checkLoginStatus() {
-        const savedUser = localStorage.getItem('chem_game_user');
-        if (savedUser) {
-            try {
-                currentUser = JSON.parse(savedUser);
-                console.log('发现本地用户:', currentUser.nickname);
+    // 暴露重试函数给备用CDN使用
+    window.authingInitRetry = function() {
+        console.log('🔄 备用CDN触发重新初始化');
+        initializeAuthing();
+    };
+    
+    // ==================== 4. 初始化Authing核心函数 ====================
+    function initializeAuthing() {
+        initializationAttempts++;
+        
+        // 如果尝试次数过多，显示备用方案
+        if (initializationAttempts > MAX_INIT_ATTEMPTS) {
+            showErrorStatus('Authing服务暂时不可用<br>请检查网络或稍后重试');
+            return;
+        }
+        
+        updateStatus(`正在连接认证服务 (${initializationAttempts}/${MAX_INIT_ATTEMPTS})...`, '⏳');
+        
+        // 检查SDK是否加载成功
+        if (typeof AuthingWeb === 'undefined') {
+            console.error(`❌ 尝试 ${initializationAttempts}: AuthingWeb SDK 未加载`);
+            if (initializationAttempts < MAX_INIT_ATTEMPTS) {
+                setTimeout(initializeAuthing, 2000);
+            } else {
+                showErrorStatus('无法加载认证服务核心库<br>请刷新页面重试');
+            }
+            return;
+        }
+        
+        // 尝试初始化Authing
+        try {
+            console.log('🔧 使用配置初始化Authing:', AUTHING_CONFIG);
+            authing = new AuthingWeb(AUTHING_CONFIG);
+            isAuthingReady = true;
+            
+            console.log('✅ Authing 初始化成功！');
+            showSuccessStatus('登录服务已就绪');
+            
+            // 根据当前状态显示界面
+            if (currentUser) {
                 showUserPanel();
-                showWelcomeMessage('欢迎回来！');
+            } else {
+                // 稍等一会再显示登录按钮，体验更好
+                setTimeout(showLoginButton, 800);
+            }
+            
+        } catch (error) {
+            console.error(`❌ Authing初始化错误 (尝试 ${initializationAttempts}):`, error.message);
+            
+            // 特别处理回调地址错误
+            if (error.message && error.message.includes('redirect_uri')) {
+                showErrorStatus(
+                    '回调地址配置错误<br>' +
+                    '请确保Authing控制台中配置为：<br>' +
+                    '<code style="font-size:0.8em;">' + AUTHING_CONFIG.redirectUri + '</code>'
+                );
                 return;
-            } catch (e) {
-                console.error('读取用户数据失败:', e);
-                localStorage.removeItem('chem_game_user');
+            }
+            
+            if (initializationAttempts < MAX_INIT_ATTEMPTS) {
+                setTimeout(initializeAuthing, 2000);
+            } else {
+                showErrorStatus('认证服务初始化失败: ' + error.message);
             }
         }
-        showLoginButton();
     }
     
-    // 显示登录按钮
-    function showLoginButton() {
+    // ==================== 5. 界面状态更新函数 ====================
+    function updateStatus(message, icon = 'ℹ️') {
         const container = document.getElementById('login-container');
+        if (!container) return;
+        
         container.innerHTML = `
-            <div style="text-align: center;">
-                <button onclick="showLoginModal()" class="btn btn-primary">
-                    <span style="font-size: 1.4rem;">🔐</span>
-                    <span>开始体验</span>
-                </button>
-                <p style="margin-top: 10px; color: #bbbbff; font-size: 0.9rem;">
-                    创建一个本地账号，保存您的游戏进度
-                </p>
-                <p style="margin-top: 5px; color: #8888cc; font-size: 0.8rem;">
-                    无需注册，数据保存在您的设备中
-                </p>
+            <div class="status-message">
+                <span class="status-icon">${icon}</span>
+                <div class="status-text">${message}</div>
+                <div style="font-size:0.9em; margin-top:5px;">正在努力连接...</div>
             </div>
         `;
     }
     
-    // 显示用户面板
+    function showSuccessStatus(message) {
+        const container = document.getElementById('login-container');
+        container.innerHTML = `
+            <div class="status-message">
+                <span class="status-icon">✅</span>
+                <div class="status-text" style="color:#4CAF50;">${message}</div>
+                <div style="font-size:0.9em; margin-top:10px;">一切准备就绪！</div>
+            </div>
+        `;
+    }
+    
+    function showErrorStatus(message) {
+        const container = document.getElementById('login-container');
+        container.innerHTML = `
+            <div class="status-message" style="color:#ff6b6b;">
+                <span class="status-icon">⚠️</span>
+                <div class="status-text">${message}</div>
+                <div style="margin-top:15px;">
+                    <button onclick="location.reload()" class="btn" style="background:#666; padding:8px 20px; font-size:0.9em;">
+                        刷新页面重试
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // ==================== 6. 显示登录按钮 ====================
+    function showLoginButton() {
+        const container = document.getElementById('login-container');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div style="text-align: center;">
+                <button id="auth-login-btn" class="btn btn-primary">
+                    <span style="font-size: 1.3rem;">🔐</span>
+                    登录 / 注册
+                </button>
+                <p style="margin-top: 15px; color: #bbbbff; font-size: 0.95rem; max-width: 400px;">
+                    使用手机号、邮箱或第三方账号登录<br>
+                    <span style="font-size:0.85em; color:#8888cc;">登录后可云端保存您的学习进度</span>
+                </p>
+            </div>
+        `;
+        
+        // 绑定登录按钮点击事件
+        document.getElementById('auth-login-btn').addEventListener('click', handleUserLogin);
+    }
+    
+    // ==================== 7. 处理用户登录 ====================
+    async function handleUserLogin() {
+        if (!isAuthingReady || !authing) {
+            alert('登录服务正在准备中，请稍候...');
+            return;
+        }
+        
+        const btn = document.getElementById('auth-login-btn');
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>正在打开登录窗口...</span>';
+            btn.disabled = true;
+            
+            // 3秒后恢复按钮状态（防止卡死）
+            setTimeout(() => {
+                if (btn.disabled) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    alert('登录窗口打开失败，请允许弹出窗口或重试');
+                }
+            }, 3000);
+        }
+        
+        try {
+            console.log('🚀 启动Authing登录流程...');
+            // 弹出Authing通用登录框
+            const user = await authing.loginWithPopup();
+            
+            console.log('✅ 登录成功，用户信息:', user);
+            handleLoginSuccess(user);
+            
+        } catch (error) {
+            console.error('登录失败:', error);
+            
+            // 用户主动取消登录
+            if (error.message === 'user closed popup') {
+                if (btn) {
+                    btn.innerHTML = '<span style="font-size: 1.3rem;">🔐</span> 登录 / 注册';
+                    btn.disabled = false;
+                }
+                return;
+            }
+            
+            // 其他错误
+            let errorMsg = '登录失败，请重试';
+            if (error.message && error.message.includes('network')) {
+                errorMsg = '网络连接问题，请检查网络';
+            }
+            
+            alert(errorMsg);
+            if (btn) {
+                btn.innerHTML = '<span style="font-size: 1.3rem;">🔐</span> 登录 / 注册';
+                btn.disabled = false;
+            }
+        }
+    }
+    
+    // ==================== 8. 登录成功处理 ====================
+    function handleLoginSuccess(user) {
+        // 构建用户信息
+        currentUser = {
+            id: user.id || user.userId || ('user_' + Date.now()),
+            nickname: user.nickname || user.username || '化学爱好者',
+            email: user.email || '',
+            phone: user.phone || '',
+            photo: user.photo || user.avatar || '',
+            loginTime: new Date().toLocaleString(),
+            // 模拟一些用户数据
+            level: 1,
+            badges: 2,
+            gameProgress: {}
+        };
+        
+        // 保存到本地存储（用于下次自动识别）
+        localStorage.setItem('chem_game_user', JSON.stringify(currentUser));
+        
+        // 更新界面
+        showUserPanel();
+        
+        // 显示欢迎消息
+        showWelcomeMessage();
+        
+        console.log('🎉 用户登录流程完成:', currentUser.nickname);
+        
+        // 记录登录事件（这里可以扩展为发送到自己的服务器）
+        recordAuthEvent('user_login', currentUser.id);
+    }
+    
+    // ==================== 9. 显示用户面板 ====================
     function showUserPanel() {
         if (!currentUser) {
             showLoginButton();
@@ -627,300 +862,87 @@
         
         container.innerHTML = `
             <div class="user-panel">
-                <div class="user-avatar">${currentUser.avatar || '👤'}</div>
+                <div class="user-avatar">${currentUser.photo ? 
+                    `<img src="${currentUser.photo}" style="width:60px;height:60px;border-radius:50%;border:2px solid #ffd700;">` : 
+                    '👤'}</div>
+                
                 <div class="user-name">${currentUser.nickname}</div>
-                ${currentUser.email ? `<div class="user-email">${currentUser.email}</div>` : ''}
+                
+                ${currentUser.email ? `<div class="user-email">${currentUser.email}</div>` : 
+                  currentUser.phone ? `<div class="user-email">${currentUser.phone}</div>` : ''}
                 
                 <div class="user-stats">
                     <div class="stat-item">
-                        <div class="stat-number">${playedGames}</div>
-                        <div class="stat-label">已玩游戏</div>
+                        <span class="stat-number">${playedGames}</span>
+                        <span class="stat-label">已玩游戏</span>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">${currentUser.badges || 2}</div>
-                        <div class="stat-label">学习徽章</div>
+                        <span class="stat-number">${currentUser.badges || 0}</span>
+                        <span class="stat-label">学习徽章</span>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">${currentUser.level || 1}</div>
-                        <div class="stat-label">化学等级</div>
+                        <span class="stat-number">${currentUser.level || 1}</span>
+                        <span class="stat-label">化学等级</span>
                     </div>
                 </div>
                 
-                <div style="margin-top: 20px;">
-                    <button onclick="showLoginModal()" class="btn btn-warning" style="padding: 8px 20px;">
-                        切换账号
-                    </button>
-                    <button onclick="handleLogout()" class="btn btn-danger" style="padding: 8px 20px;">
+                <div style="margin-top: 25px;">
+                    <button onclick="handleLogout()" class="btn" style="background: rgba(255, 107, 107, 0.2); 
+                           color: #ff6b6b; border: 1px solid #ff6b6b; padding: 10px 25px;">
                         退出登录
                     </button>
                 </div>
                 
                 <div style="color: #8888cc; font-size: 0.8rem; margin-top: 15px;">
-                    注册时间: ${currentUser.registerTime || '刚刚'}
+                    本次登录: ${currentUser.loginTime}
                 </div>
             </div>
         `;
     }
     
-    // 显示登录弹窗
-    function showLoginModal() {
-        document.getElementById('loginModal').classList.add('active');
-    }
-    
-    // 关闭弹窗
-    function closeModal() {
-        document.getElementById('loginModal').classList.remove('active');
-    }
-    
-    // 初始化头像按钮
-    function initAvatarButtons() {
-        // 样式化头像按钮
-        const style = document.createElement('style');
-        style.textContent = `
-            .avatar-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.8rem;
-                background: rgba(255, 255, 255, 0.1);
-                border: 2px solid rgba(255, 215, 0, 0.3);
-                border-radius: 50%;
-                cursor: pointer;
-                transition: all 0.3s ease;
+    // ==================== 10. 检查本地用户 ====================
+    function checkLocalUser() {
+        const savedUser = localStorage.getItem('chem_game_user');
+        if (savedUser) {
+            try {
+                currentUser = JSON.parse(savedUser);
+                console.log('发现本地用户信息:', currentUser.nickname);
+                // 先显示用户面板，等Authing初始化
+                showUserPanel();
+                return true;
+            } catch (e) {
+                console.error('读取本地用户数据失败:', e);
+                localStorage.removeItem('chem_game_user');
             }
-            .avatar-btn:hover {
-                transform: scale(1.1);
-                border-color: #ffd700;
-                background: rgba(255, 215, 0, 0.1);
-            }
-            .avatar-btn.active {
-                border-color: #ffd700;
-                background: rgba(255, 215, 0, 0.2);
-                box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // 选择头像
-    function selectAvatar(emoji) {
-        document.getElementById('selectedAvatar').value = emoji;
-        
-        // 更新按钮状态
-        document.querySelectorAll('.avatar-btn').forEach(btn => {
-            if (btn.dataset.emoji === emoji) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    }
-    
-    // 处理登录/注册
-    function handleLogin(event) {
-        event.preventDefault();
-        
-        const nickname = document.getElementById('nickname').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const avatar = document.getElementById('selectedAvatar').value;
-        
-        if (!nickname) {
-            alert('请输入昵称');
-            return false;
         }
-        
-        // 创建用户
-        currentUser = {
-            id: 'user_' + Date.now(),
-            nickname: nickname,
-            email: email || '',
-            avatar: avatar,
-            registerTime: new Date().toLocaleString(),
-            lastLogin: new Date().toLocaleString(),
-            level: 1,
-            badges: 2,
-            gameProgress: {}
-        };
-        
-        // 保存到本地存储
-        localStorage.setItem('chem_game_user', JSON.stringify(currentUser));
-        
-        // 关闭弹窗
-        closeModal();
-        
-        // 更新界面
-        showUserPanel();
-        
-        // 显示欢迎消息
-        showWelcomeMessage(`欢迎${email ? '回来，' : ''}${nickname}！`);
-        
-        // 记录游戏数据示例
-        recordGameAction('login');
-        
         return false;
     }
     
-    // 退出登录
+    // ==================== 11. 退出登录 ====================
     function handleLogout() {
-        if (confirm('确定要退出登录吗？您的游戏进度已保存在本地。')) {
+        if (confirm('确定要退出登录吗？您的学习记录已保存在云端。')) {
             currentUser = null;
             localStorage.removeItem('chem_game_user');
+            
+            // 如果有authing实例，可以调用退出方法
+            if (authing && typeof authing.logout === 'function') {
+                authing.logout();
+            }
+            
             showLoginButton();
-            showWelcomeMessage('已退出登录，欢迎下次再来！');
+            showWelcomeMessage('已退出登录，欢迎下次再来！', '👋');
         }
     }
     
-    // 显示欢迎消息
-    function showWelcomeMessage(message) {
-        // 移除旧消息
-        const oldMsg = document.querySelector('.welcome-message');
-        if (oldMsg) oldMsg.remove();
+    // ==================== 12. 显示欢迎消息 ====================
+    function showWelcomeMessage(customMessage, customIcon) {
+        const message = customMessage || `欢迎回来，${currentUser.nickname}！`;
+        const icon = customIcon || '🎉';
         
-        // 创建新消息
+        // 创建消息元素
         const welcomeMsg = document.createElement('div');
         welcomeMsg.className = 'welcome-message';
-        welcomeMsg.innerHTML = `
-            <span style="font-size: 1.5rem;">🎉</span>
-            <div>${message}</div>
-        `;
-        
-        document.body.appendChild(welcomeMsg);
-        
-        // 3秒后移除
-        setTimeout(() => {
-            welcomeMsg.style.animation = 'slideOut 0.5s ease forwards';
-            setTimeout(() => {
-                if (welcomeMsg.parentNode) {
-                    welcomeMsg.remove();
-                }
-            }, 500);
-        }, 3000);
-    }
-    
-    // 记录游戏行为
-    function recordGameAction(action, gameName = null) {
-        if (!currentUser) return;
-        
-        const progress = JSON.parse(localStorage.getItem('chem_game_progress') || '{}');
-        
-        if (gameName) {
-            if (!progress[gameName]) {
-                progress[gameName] = {
-                    firstPlayed: new Date().toISOString(),
-                    playCount: 0,
-                    lastPlayed: null
-                };
-            }
-            progress[gameName].playCount++;
-            progress[gameName].lastPlayed = new Date().toISOString();
-        }
-        
-        // 更新用户等级（基于游戏次数）
-        const totalPlays = Object.values(progress).reduce((sum, game) => sum + (game.playCount || 0), 0);
-        currentUser.level = Math.min(Math.floor(totalPlays / 5) + 1, 10);
-        
-        // 更新徽章
-        if (totalPlays >= 10) currentUser.badges = 3;
-        else if (totalPlays >= 5) currentUser.badges = 2;
-        
-        // 保存
-        localStorage.setItem('chem_game_progress', JSON.stringify(progress));
-        localStorage.setItem('chem_game_user', JSON.stringify(currentUser));
-        
-        // 更新显示
-        if (document.querySelector('.user-panel')) {
-            showUserPanel();
-        }
-    }
-    
-    // 初始化游戏卡片
-    function initGameCards() {
-        const cards = document.querySelectorAll('.game-card');
-        cards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            
-            setTimeout(() => {
-                card.style.transition = 'all 0.5s ease';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, index * 150);
-        });
-        
-        // 为游戏按钮添加记录功能
-        document.querySelectorAll('.play-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // 获取游戏名称
-                const gameCard = this.closest('.game-card');
-                const gameTitle = gameCard.querySelector('.game-title').textContent.trim();
-                
-                // 记录游戏开始
-                if (currentUser) {
-                    recordGameAction('game_started', gameTitle);
-                    console.log(`${currentUser.nickname} 开始了游戏: ${gameTitle}`);
-                }
-            });
-        });
-    }
-    
-    // 数据导出功能（可选）
-    function exportUserData() {
-        if (!currentUser) {
-            alert('请先登录');
-            return;
-        }
-        
-        const userData = {
-            user: currentUser,
-            progress: JSON.parse(localStorage.getItem('chem_game_progress') || '{}'),
-            exportTime: new Date().toISOString()
-        };
-        
-        const dataStr = JSON.stringify(userData, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = `化学游戏中心_${currentUser.nickname}_${new Date().toISOString().split('T')[0]}.json`;
-        
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
-        
-        alert('数据已导出为JSON文件，您可以保存到电脑备份。');
-    }
-    
-    // 数据导入功能（可选）
-    function importUserData() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        
-        input.onchange = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    if (confirm(`确定要导入 ${data.user.nickname} 的数据吗？这将覆盖当前数据。`)) {
-                        localStorage.setItem('chem_game_user', JSON.stringify(data.user));
-                        localStorage.setItem('chem_game_progress', JSON.stringify(data.progress));
-                        
-                        currentUser = data.user;
-                        showUserPanel();
-                        showWelcomeMessage('数据导入成功！');
-                    }
-                } catch (error) {
-                    alert('文件格式错误，无法导入数据');
-                }
-            };
-            reader.readAsText(file);
-        };
-        
-        input.click();
-    }
-    
-    </script>
-</body>
-</html>
+        welcomeMsg.style.cssText = `
+            position: fixed; top: 20px; right: 20px; 
+            background: linear-gradient(45deg, #4CAF50, #2E7D32);
+            color: white; padding: 15px 25px; border-radius: 10px
