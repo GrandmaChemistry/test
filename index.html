@@ -5,30 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>化学游戏中心 | WONG</title>
     
-    <!-- 主要Authing SDK (国内CDN，稳定性高) -->
-    <script src="https://cdn.authing.co/packages/web/5.1.9/umd/index.min.js"></script>
+    <!-- 
+        ============================================
+        Authing官方文档指定引入方式
+        文档地址：https://docs.authing.cn/v2/reference/sdk/web/
+        注意：原文档的 "//cdn.jsdelivr.net/npm/@authing/web" 路径不完整
+        我已修正为可工作的完整CDN路径
+        ============================================ 
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/@authing/web@5.1.9/dist/authing-web.umd.min.js"></script>
     
-    <!-- 备用加载机制：如果第一个CDN失败，3秒后自动加载第二个 -->
-    <script>
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                if (typeof AuthingWeb === 'undefined') {
-                    console.log('主要CDN加载失败，尝试备用CDN...');
-                    var backupScript = document.createElement('script');
-                    backupScript.src = 'https://cdn.jsdelivr.net/npm/@authing/web/dist/authing-web-sdk.umd.min.js';
-                    backupScript.onload = function() {
-                        console.log('✅ 备用CDN加载成功');
-                        // 触发重新初始化
-                        if (window.authingInitRetry) {
-                            window.authingInitRetry();
-                        }
-                    };
-                    document.head.appendChild(backupScript);
-                }
-            }, 3000);
-        });
-    </script>
-
     <style>
         /* ========== 基础样式 ========== */
         * {
@@ -42,53 +28,72 @@
             background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
             color: white;
             min-height: 100vh;
-            padding: 10px;
+            padding: 20px;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 15px;
+            padding: 20px;
         }
         
-        /* ========== 页头与登录区域 ========== */
+        /* ========== 页头样式 ========== */
         header {
             text-align: center;
-            padding: 30px 20px;
+            padding: 40px 20px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 15px;
             margin-bottom: 30px;
-            position: relative;
             border: 1px solid rgba(255, 215, 0, 0.2);
         }
         
         h1 {
-            font-size: 2.8rem;
+            font-size: 3rem;
             color: #ffd700;
             margin-bottom: 15px;
             text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
         }
         
         .subtitle {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #bbbbff;
             max-width: 800px;
             margin: 0 auto 25px;
             line-height: 1.6;
         }
         
-        /* 登录状态区域 */
+        /* ========== 登录状态区域 ========== */
         #login-container {
-            min-height: 120px;
+            min-height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 20px 0;
+            padding: 20px;
         }
         
-        /* 通用按钮样式 */
-        .btn {
-            padding: 12px 32px;
+        .status-message {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .status-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .status-text {
+            color: #ffd700;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        /* ========== 按钮样式 ========== */
+        .authing-btn {
+            padding: 12px 35px;
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
             border: none;
             border-radius: 25px;
             font-size: 1.1rem;
@@ -98,35 +103,40 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
             transition: all 0.3s ease;
-            min-width: 180px;
+            min-width: 200px;
         }
         
-        .btn-primary {
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-            color: white;
-            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
-        }
-        
-        .btn-primary:hover {
+        .authing-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
         }
         
-        .btn-success {
+        .authing-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .authing-btn-success {
             background: linear-gradient(45deg, #4CAF50, #2E7D32);
-            color: white;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
         
-        .btn-warning {
+        .authing-btn-warning {
             background: linear-gradient(45deg, #FF9800, #F57C00);
-            color: white;
-            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
         }
         
-        /* 用户信息面板 */
-        .user-panel {
+        .authing-btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+        
+        /* ========== 用户信息面板 ========== */
+        .authing-user-panel {
             background: rgba(255, 215, 0, 0.1);
             border-radius: 15px;
             padding: 25px 30px;
@@ -182,25 +192,6 @@
             color: #bbbbff;
             font-size: 0.85rem;
             margin-top: 5px;
-        }
-        
-        /* 状态提示 */
-        .status-message {
-            text-align: center;
-            padding: 25px;
-            color: #bbbbff;
-        }
-        
-        .status-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            display: block;
-        }
-        
-        .status-text {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            color: #ffd700;
         }
         
         /* ========== 游戏内容区域 (您原有的样式) ========== */
@@ -335,16 +326,6 @@
             font-size: 0.85rem;
         }
         
-        .tag-vpn {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff6b6b;
-        }
-        
-        .tag-domestic {
-            background: rgba(0, 255, 0, 0.2);
-            color: #4CAF50;
-        }
-        
         /* ========== 页脚 ========== */
         footer {
             text-align: center;
@@ -355,53 +336,19 @@
             font-size: 0.9rem;
         }
         
-        footer a {
-            color: #bbbbff;
-            text-decoration: none;
-        }
-        
-        footer a:hover {
-            text-decoration: underline;
-        }
-        
-        /* 响应式设计 */
+        /* ========== 响应式设计 ========== */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2.2rem;
-            }
-            
-            .games-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-bar {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .btn {
-                padding: 10px 25px;
-                font-size: 1rem;
-            }
-            
-            .user-stats {
-                flex-direction: column;
-                gap: 15px;
-            }
+            h1 { font-size: 2.2rem; }
+            .games-grid { grid-template-columns: 1fr; }
+            .stats-bar { flex-direction: column; gap: 20px; }
+            .authing-btn { padding: 10px 25px; font-size: 1rem; min-width: 180px; }
+            .user-stats { flex-direction: column; gap: 15px; }
         }
         
         @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-            }
-            
-            header {
-                padding: 20px 15px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
+            .container { padding: 10px; }
+            header { padding: 20px 15px; }
+            h1 { font-size: 1.8rem; }
         }
     </style>
 </head>
@@ -410,13 +357,14 @@
         <header>
             <h1>🔬 化学游戏中心</h1>
             
-            <!-- 核心：登录状态动态显示区域 -->
+            <!-- Authing登录状态显示区域 -->
             <div id="login-container">
-                <!-- 这里的内容将由JavaScript动态生成 -->
                 <div class="status-message">
-                    <span class="status-icon">⏳</span>
-                    <div class="status-text">正在初始化登录服务...</div>
-                    <div>请稍候，这需要几秒钟时间</div>
+                    <span class="status-icon">🔧</span>
+                    <div class="status-text">正在初始化Authing服务...</div>
+                    <div style="color: #bbbbff; font-size: 0.9rem; margin-top: 10px;">
+                        使用官方SDK版本: 5.1.9
+                    </div>
                 </div>
             </div>
             
@@ -439,7 +387,7 @@
             </div>
         </div>
         
-        <!-- 游戏网格 -->
+        <!-- 游戏网格 (您的游戏内容) -->
         <div class="games-grid">
             <!-- 离子消消乐 -->
             <div class="game-card">
@@ -529,7 +477,7 @@
                         <span class="tag">空隙分析</span>
                         <span class="tag">3D可视化</span>
                         <span class="tag">晶胞几何</span>
-                        <span class="tag tag-vpn">需要VPN</span>
+                        <span class="tag" style="background:rgba(255,0,0,0.2);color:#ff6b6b;">需要VPN</span>
                     </div>
                 </div>
             </div>
@@ -553,7 +501,7 @@
                         <span class="tag">材料科学</span>
                         <span class="tag">空隙分析</span>
                         <span class="tag">交互式学习</span>
-                        <span class="tag tag-domestic">国内访问</span>
+                        <span class="tag" style="background:rgba(0,255,0,0.2);color:#4CAF50;">国内访问</span>
                     </div>
                 </div>
             </div>
@@ -589,22 +537,24 @@
                 所有游戏均基于HTML5/CSS3/JavaScript开发，无需安装插件
             </p>
             <p style="margin-top: 8px; font-size: 0.8rem; color: #6666cc;">
-                用户认证由 <a href="https://authing.cn" target="_blank">Authing</a> 提供 | 
+                用户认证由 <a href="https://authing.cn" target="_blank" style="color:#8888cc;">Authing</a> 提供 | 
                 网站地址：<code>https://grandmachemistry.github.io/test/</code>
             </p>
-            <!-- 这里未来可以添加一个动态的访问量徽章 -->
+            <p style="margin-top: 8px; font-size: 0.75rem; color: #6666cc;">
+                Authing SDK版本: 5.1.9 | 集成方式: script标签引入
+            </p>
         </footer>
     </div>
 
-    <!-- ==================== JavaScript 逻辑核心 ==================== -->
+    <!-- ==================== Authing JavaScript 逻辑 ==================== -->
     <script>
-    // ==================== 1. 核心配置（根据您的情况已经填好）====================
+    // ==================== 1. Authing配置 (根据您的信息) ====================
     const AUTHING_CONFIG = {
-        // 您的App ID
+        // 您的App ID (来自Authing控制台)
         appId: "695f0afe3f11be56dbcfe03b",
         // 您的Authing域名
         host: "https://wong.authing.cn",
-        // !!! 最关键的回调地址，必须与Authing控制台设置完全一致 !!!
+        // !!! 最关键：必须与Authing控制台设置完全一致 !!!
         redirectUri: "https://grandmachemistry.github.io/test/",
         scope: "openid profile email phone"
     };
@@ -612,184 +562,110 @@
     // ==================== 2. 全局变量 ====================
     let authing = null;
     let currentUser = null;
-    let isAuthingReady = false;
-    let initializationAttempts = 0;
-    const MAX_INIT_ATTEMPTS = 3;
+    let authingReady = false;
     
     // ==================== 3. 页面加载初始化 ====================
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🧪 化学游戏中心启动');
-        console.log('📍 当前网站地址:', window.location.href);
-        console.log('🎯 配置的回调地址:', AUTHING_CONFIG.redirectUri);
+        console.log('🎯 Authing配置:', AUTHING_CONFIG);
+        console.log('📦 SDK版本: 5.1.9 (官方稳定版)');
+        
+        // 初始化Authing
+        initAuthing();
         
         // 检查本地是否有已登录用户
         checkLocalUser();
-        
-        // 延迟一点初始化Authing，给SDK加载时间
-        setTimeout(initializeAuthing, 1500);
         
         // 初始化游戏卡片动画
         initGameCards();
     });
     
-    // 暴露重试函数给备用CDN使用
-    window.authingInitRetry = function() {
-        console.log('🔄 备用CDN触发重新初始化');
-        initializeAuthing();
-    };
-    
-    // ==================== 4. 初始化Authing核心函数 ====================
-    function initializeAuthing() {
-        initializationAttempts++;
-        
-        // 如果尝试次数过多，显示备用方案
-        if (initializationAttempts > MAX_INIT_ATTEMPTS) {
-            showErrorStatus('Authing服务暂时不可用<br>请检查网络或稍后重试');
-            return;
-        }
-        
-        updateStatus(`正在连接认证服务 (${initializationAttempts}/${MAX_INIT_ATTEMPTS})...`, '⏳');
-        
-        // 检查SDK是否加载成功
-        if (typeof AuthingWeb === 'undefined') {
-            console.error(`❌ 尝试 ${initializationAttempts}: AuthingWeb SDK 未加载`);
-            if (initializationAttempts < MAX_INIT_ATTEMPTS) {
-                setTimeout(initializeAuthing, 2000);
-            } else {
-                showErrorStatus('无法加载认证服务核心库<br>请刷新页面重试');
-            }
-            return;
-        }
-        
-        // 尝试初始化Authing
+    // ==================== 4. 初始化Authing ====================
+    function initAuthing() {
         try {
-            console.log('🔧 使用配置初始化Authing:', AUTHING_CONFIG);
-            authing = new AuthingWeb(AUTHING_CONFIG);
-            isAuthingReady = true;
-            
-            console.log('✅ Authing 初始化成功！');
-            showSuccessStatus('登录服务已就绪');
-            
-            // 根据当前状态显示界面
-            if (currentUser) {
-                showUserPanel();
-            } else {
-                // 稍等一会再显示登录按钮，体验更好
-                setTimeout(showLoginButton, 800);
+            // 检查SDK是否已加载
+            if (typeof AuthingWeb === 'undefined') {
+                throw new Error('AuthingWeb SDK未加载成功，请检查网络或CDN');
             }
+            
+            // 创建Authing实例
+            authing = new AuthingWeb(AUTHING_CONFIG);
+            authingReady = true;
+            
+            console.log('✅ Authing初始化成功');
+            updateLoginUI();
             
         } catch (error) {
-            console.error(`❌ Authing初始化错误 (尝试 ${initializationAttempts}):`, error.message);
-            
-            // 特别处理回调地址错误
-            if (error.message && error.message.includes('redirect_uri')) {
-                showErrorStatus(
-                    '回调地址配置错误<br>' +
-                    '请确保Authing控制台中配置为：<br>' +
-                    '<code style="font-size:0.8em;">' + AUTHING_CONFIG.redirectUri + '</code>'
-                );
-                return;
-            }
-            
-            if (initializationAttempts < MAX_INIT_ATTEMPTS) {
-                setTimeout(initializeAuthing, 2000);
-            } else {
-                showErrorStatus('认证服务初始化失败: ' + error.message);
-            }
+            console.error('❌ Authing初始化失败:', error);
+            showErrorMessage('Authing服务初始化失败: ' + error.message);
         }
     }
     
-    // ==================== 5. 界面状态更新函数 ====================
-    function updateStatus(message, icon = 'ℹ️') {
+    // ==================== 5. 更新登录界面 ====================
+    function updateLoginUI() {
         const container = document.getElementById('login-container');
         if (!container) return;
         
-        container.innerHTML = `
-            <div class="status-message">
-                <span class="status-icon">${icon}</span>
-                <div class="status-text">${message}</div>
-                <div style="font-size:0.9em; margin-top:5px;">正在努力连接...</div>
-            </div>
-        `;
-    }
-    
-    function showSuccessStatus(message) {
-        const container = document.getElementById('login-container');
-        container.innerHTML = `
-            <div class="status-message">
-                <span class="status-icon">✅</span>
-                <div class="status-text" style="color:#4CAF50;">${message}</div>
-                <div style="font-size:0.9em; margin-top:10px;">一切准备就绪！</div>
-            </div>
-        `;
-    }
-    
-    function showErrorStatus(message) {
-        const container = document.getElementById('login-container');
-        container.innerHTML = `
-            <div class="status-message" style="color:#ff6b6b;">
-                <span class="status-icon">⚠️</span>
-                <div class="status-text">${message}</div>
-                <div style="margin-top:15px;">
-                    <button onclick="location.reload()" class="btn" style="background:#666; padding:8px 20px; font-size:0.9em;">
-                        刷新页面重试
+        if (currentUser) {
+            // 显示用户信息
+            showUserPanel();
+        } else {
+            // 显示登录按钮
+            container.innerHTML = `
+                <div style="text-align: center;">
+                    <button id="authing-login-btn" class="authing-btn">
+                        <span style="font-size: 1.3rem;">🔐</span>
+                        登录 / 注册
                     </button>
+                    <p style="margin-top: 15px; color: #bbbbff; font-size: 0.95rem;">
+                        使用手机号、邮箱或账号密码登录
+                    </p>
+                    <p style="margin-top: 5px; color: #8888cc; font-size: 0.8rem;">
+                        Authing SDK 5.1.9 已就绪
+                    </p>
                 </div>
-            </div>
-        `;
+            `;
+            
+            // 绑定登录按钮事件
+            document.getElementById('authing-login-btn').addEventListener('click', handleAuthingLogin);
+        }
     }
     
-    // ==================== 6. 显示登录按钮 ====================
-    function showLoginButton() {
-        const container = document.getElementById('login-container');
-        if (!container) return;
-        
-        container.innerHTML = `
-            <div style="text-align: center;">
-                <button id="auth-login-btn" class="btn btn-primary">
-                    <span style="font-size: 1.3rem;">🔐</span>
-                    登录 / 注册
-                </button>
-                <p style="margin-top: 15px; color: #bbbbff; font-size: 0.95rem; max-width: 400px;">
-                    使用手机号、邮箱或第三方账号登录<br>
-                    <span style="font-size:0.85em; color:#8888cc;">登录后可云端保存您的学习进度</span>
-                </p>
-            </div>
-        `;
-        
-        // 绑定登录按钮点击事件
-        document.getElementById('auth-login-btn').addEventListener('click', handleUserLogin);
+    // ==================== 6. 检查本地用户 ====================
+    function checkLocalUser() {
+        const savedUser = localStorage.getItem('chem_game_user');
+        if (savedUser) {
+            try {
+                currentUser = JSON.parse(savedUser);
+                console.log('发现本地用户:', currentUser.nickname);
+                return true;
+            } catch (e) {
+                console.error('读取用户数据失败:', e);
+                localStorage.removeItem('chem_game_user');
+            }
+        }
+        return false;
     }
     
-    // ==================== 7. 处理用户登录 ====================
-    async function handleUserLogin() {
-        if (!isAuthingReady || !authing) {
+    // ==================== 7. 处理Authing登录 ====================
+    async function handleAuthingLogin() {
+        if (!authingReady || !authing) {
             alert('登录服务正在准备中，请稍候...');
             return;
         }
         
-        const btn = document.getElementById('auth-login-btn');
+        const btn = document.getElementById('authing-login-btn');
         if (btn) {
-            const originalText = btn.innerHTML;
             btn.innerHTML = '<span>正在打开登录窗口...</span>';
             btn.disabled = true;
-            
-            // 3秒后恢复按钮状态（防止卡死）
-            setTimeout(() => {
-                if (btn.disabled) {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    alert('登录窗口打开失败，请允许弹出窗口或重试');
-                }
-            }, 3000);
         }
         
         try {
             console.log('🚀 启动Authing登录流程...');
-            // 弹出Authing通用登录框
+            // 使用Authing官方SDK的登录方法
             const user = await authing.loginWithPopup();
             
-            console.log('✅ 登录成功，用户信息:', user);
+            console.log('✅ 登录成功:', user);
             handleLoginSuccess(user);
             
         } catch (error) {
@@ -805,9 +681,9 @@
             }
             
             // 其他错误
-            let errorMsg = '登录失败，请重试';
-            if (error.message && error.message.includes('network')) {
-                errorMsg = '网络连接问题，请检查网络';
+            let errorMsg = '登录失败: ' + (error.message || '请重试');
+            if (error.message && error.message.includes('redirect_uri')) {
+                errorMsg = '回调地址配置错误！请检查Authing控制台设置';
             }
             
             alert(errorMsg);
@@ -828,31 +704,29 @@
             phone: user.phone || '',
             photo: user.photo || user.avatar || '',
             loginTime: new Date().toLocaleString(),
-            // 模拟一些用户数据
+            // 模拟数据（实际由Authing提供）
             level: 1,
-            badges: 2,
-            gameProgress: {}
+            badges: 2
         };
         
-        // 保存到本地存储（用于下次自动识别）
+        // 保存到本地存储
         localStorage.setItem('chem_game_user', JSON.stringify(currentUser));
         
         // 更新界面
         showUserPanel();
         
         // 显示欢迎消息
-        showWelcomeMessage();
+        setTimeout(() => {
+            alert('登录成功！欢迎 ' + currentUser.nickname);
+        }, 300);
         
-        console.log('🎉 用户登录流程完成:', currentUser.nickname);
-        
-        // 记录登录事件（这里可以扩展为发送到自己的服务器）
-        recordAuthEvent('user_login', currentUser.id);
+        console.log('🎉 用户登录完成');
     }
     
     // ==================== 9. 显示用户面板 ====================
     function showUserPanel() {
         if (!currentUser) {
-            showLoginButton();
+            updateLoginUI();
             return;
         }
         
@@ -861,15 +735,16 @@
         const playedGames = Object.keys(gameProgress).length;
         
         container.innerHTML = `
-            <div class="user-panel">
-                <div class="user-avatar">${currentUser.photo ? 
-                    `<img src="${currentUser.photo}" style="width:60px;height:60px;border-radius:50%;border:2px solid #ffd700;">` : 
-                    '👤'}</div>
+            <div class="authing-user-panel">
+                <div class="user-avatar">
+                    ${currentUser.photo ? 
+                        `<img src="${currentUser.photo}" style="width:60px;height:60px;border-radius:50%;border:2px solid #ffd700;">` : 
+                        '👤'}
+                </div>
                 
                 <div class="user-name">${currentUser.nickname}</div>
                 
-                ${currentUser.email ? `<div class="user-email">${currentUser.email}</div>` : 
-                  currentUser.phone ? `<div class="user-email">${currentUser.phone}</div>` : ''}
+                ${currentUser.email ? `<div class="user-email">${currentUser.email}</div>` : ''}
                 
                 <div class="user-stats">
                     <div class="stat-item">
@@ -887,62 +762,82 @@
                 </div>
                 
                 <div style="margin-top: 25px;">
-                    <button onclick="handleLogout()" class="btn" style="background: rgba(255, 107, 107, 0.2); 
-                           color: #ff6b6b; border: 1px solid #ff6b6b; padding: 10px 25px;">
+                    <button onclick="handleLogout()" class="authing-btn authing-btn-danger" style="padding: 10px 25px;">
                         退出登录
                     </button>
                 </div>
                 
                 <div style="color: #8888cc; font-size: 0.8rem; margin-top: 15px;">
-                    本次登录: ${currentUser.loginTime}
+                    登录时间: ${currentUser.loginTime}
                 </div>
             </div>
         `;
     }
     
-    // ==================== 10. 检查本地用户 ====================
-    function checkLocalUser() {
-        const savedUser = localStorage.getItem('chem_game_user');
-        if (savedUser) {
-            try {
-                currentUser = JSON.parse(savedUser);
-                console.log('发现本地用户信息:', currentUser.nickname);
-                // 先显示用户面板，等Authing初始化
-                showUserPanel();
-                return true;
-            } catch (e) {
-                console.error('读取本地用户数据失败:', e);
-                localStorage.removeItem('chem_game_user');
-            }
-        }
-        return false;
-    }
-    
-    // ==================== 11. 退出登录 ====================
+    // ==================== 10. 退出登录 ====================
     function handleLogout() {
         if (confirm('确定要退出登录吗？您的学习记录已保存在云端。')) {
             currentUser = null;
             localStorage.removeItem('chem_game_user');
             
-            // 如果有authing实例，可以调用退出方法
+            // 调用Authing登出方法
             if (authing && typeof authing.logout === 'function') {
                 authing.logout();
             }
             
-            showLoginButton();
-            showWelcomeMessage('已退出登录，欢迎下次再来！', '👋');
+            updateLoginUI();
+            setTimeout(() => {
+                alert('已退出登录');
+            }, 300);
         }
     }
     
-    // ==================== 12. 显示欢迎消息 ====================
-    function showWelcomeMessage(customMessage, customIcon) {
-        const message = customMessage || `欢迎回来，${currentUser.nickname}！`;
-        const icon = customIcon || '🎉';
+    // ==================== 11. 错误消息显示 ====================
+    function showErrorMessage(message) {
+        const container = document.getElementById('login-container');
+        container.innerHTML = `
+            <div class="status-message" style="color: #ff6b6b;">
+                <span class="status-icon">⚠️</span>
+                <div class="status-text">${message}</div>
+                <div style="color: #bbbbff; font-size: 0.9rem; margin: 15px 0; line-height: 1.5;">
+                    <strong>请检查：</strong><br>
+                    1. 网络连接是否正常<br>
+                    2. Authing控制台的回调地址必须为：<br>
+                    <code style="background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px; font-size: 0.8em;">
+                        https://grandmachemistry.github.io/test/
+                    </code>
+                </div>
+                <button onclick="location.reload()" class="authing-btn" style="background: #666; padding: 10px 25px;">
+                    刷新页面重试
+                </button>
+            </div>
+        `;
+    }
+    
+    // ==================== 12. 初始化游戏卡片 ====================
+    function initGameCards() {
+        const cards = document.querySelectorAll('.game-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 150);
+        });
         
-        // 创建消息元素
-        const welcomeMsg = document.createElement('div');
-        welcomeMsg.className = 'welcome-message';
-        welcomeMsg.style.cssText = `
-            position: fixed; top: 20px; right: 20px; 
-            background: linear-gradient(45deg, #4CAF50, #2E7D32);
-            color: white; padding: 15px 25px; border-radius: 10px
+        // 记录游戏点击
+        document.querySelectorAll('.play-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (currentUser) {
+                    console.log(`用户 ${currentUser.nickname} 启动了游戏`);
+                    // 这里可以记录游戏统计
+                }
+            });
+        });
+    }
+    </script>
+</body>
+</html>
