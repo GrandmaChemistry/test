@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化学游戏中心 | WONG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            color: #ffd700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #bbbbff;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .game-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+        
+        .game-preview {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .game-card:hover .preview-overlay {
+            opacity: 1;
+        }
+        
+        .play-btn {
+            padding: 12px 30px;
+            background: linear-gradient(45deg, #ffd700, #ff6b00);
+            border: none;
+            border-radius: 25px;
+            color: #1a237e;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        
+        .game-info {
+            padding: 25px;
+        }
+        
+        .game-title {
+            font-size: 1.8rem;
+            color: #ffd700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .game-icon {
+            font-size: 1.5rem;
+        }
+        
+        .game-description {
+            color: #ccccff;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .game-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .tag {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+        
+        .tag-vpn {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+        }
+        
+        .tag-domestic {
+            background: rgba(0, 255, 0, 0.2);
+            color: #4CAF50;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8888cc;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #bbbbff;
+        }
+        
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 化学游戏中心</h1>
+            <div style="margin-top: 20px;">
+                <button onclick="showWechatLogin()" 
+                        style="padding: 10px 25px; 
+                               background: linear-gradient(45deg, #09bb07, #09bb07); 
+                               color: white; 
+                               border: none; 
+                               border-radius: 25px; 
+                               font-size: 1rem; 
+                               cursor: pointer;
+                               display: flex;
+                               align-items: center;
+                               gap: 10px;
+                               margin: 0 auto;">
+                    <span style="font-size: 1.2rem;">💬</span> 微信登录
+                </button>
+                <p style="margin-top: 10px; color: #bbbbff; font-size: 0.9rem;">
+                    登录后可保存游戏进度，获得学习徽章
+                </p>
+            </div>
+            <p class="subtitle">通过有趣的游戏学习化学知识，让化学学习变得生动有趣！包含离子反应、晶体结构和原子构造原理等核心概念。</p>
+        </header>
+        
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-number">6</div>
+                <div class="stat-label">精品游戏</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">200+</div>
+                <div class="stat-label">化学知识点</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">学习乐趣</div>
+            </div>
+        </div>
+        
+        <div class="games-grid">
+            <!-- 离子消消乐 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #4ECDC4, #FF6B6B);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('离子消消乐-WONG.html', '_blank')">开始游戏</button>
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">⚗️</span> 离子消消乐
+                    </h2>
+                    <p class="game-description">
+                        通过消除不共存的离子来学习离子反应规则！找出会生成沉淀、气体或发生氧化还原反应的离子对，测试你的化学知识。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">离子反应</span>
+                        <span class="tag">沉淀反应</span>
+                        <span class="tag">氧化还原</span>
+                        <span class="tag">游戏化学习</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 晶体结构 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #2196F3, #9C27B0);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('晶体结构-WONG.html', '_blank')">开始游戏</button>
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">💎</span> 晶体结构星空实验室
+                    </h2>
+                    <p class="game-description">
+                        在星空中探索各种晶体结构！可视化观察简单立方、体心立方、面心立方和金刚石结构，理解晶体学的奥秘。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">晶体学</span>
+                        <span class="tag">三维可视化</span>
+                        <span class="tag">星空主题</span>
+                        <span class="tag">交互学习</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 构造原理 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #4CAF50, #FF5722);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('构造原理-WONG.html', '_blank')">开始游戏</button>
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">🏨</span> 构造原理酒店
+                    </h2>
+                    <p class="game-description">
+                        在量子酒店中安排电子入住！通过拖拽电子学习原子构造原理、电子填充顺序和洪特规则，掌握原子结构的关键知识。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">原子结构</span>
+                        <span class="tag">构造原理</span>
+                        <span class="tag">量子力学</span>
+                        <span class="tag">酒店模拟</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新游戏1：晶体空隙VPN版 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #FF9800, #E91E63);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('https://crystavoid.vercel.app/', '_blank')">开始游戏</button>
+                        <!-- https://venerable-piroshki-eb5d8f.netlify.app/ -->
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">🧊</span> 晶体空隙探索
+                    </h2>
+                    <p class="game-description">
+                        深入探索面心立方和体心立方晶胞中的四面体空隙和八面体空隙！通过交互式3D模型，直观理解晶体空隙的位置、数量和几何特征。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">晶体结构</span>
+                        <span class="tag">空隙分析</span>
+                        <span class="tag">3D可视化</span>
+                        <span class="tag">晶胞几何</span>
+                        <span class="tag tag-vpn">需要VPN</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新游戏2：晶体空隙国内版 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #00BCD4, #8BC34A);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('https://usautodeploy-crystalvoidexplorer30-hxntv4.deployai365.com/', '_blank')">开始游戏</button>
+                        <!-- https://storied-tapioca-cddeaa.netlify.app/ -->
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">🔍</span> 晶体空隙实验室
+                    </h2>
+                    <p class="game-description">
+                        国内可直接访问的晶体空隙探索工具！研究面心立方和体心立方晶胞中的空隙分布，学习空隙的位置、大小和对材料性能的影响。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">晶体学</span>
+                        <span class="tag">材料科学</span>
+                        <span class="tag">空隙分析</span>
+                        <span class="tag">交互式学习</span>
+                        <span class="tag tag-domestic">国内访问</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新游戏3：铁原子电子云交互式教学平台 -->
+            <div class="game-card">
+                <div class="game-preview" style="background: linear-gradient(135deg, #FF3D00, #2979FF);">
+                    <div class="preview-overlay">
+                        <button class="play-btn" onclick="window.open('https://usautodeploy-ironnebula-ng6541.deployai365.com/', '_blank')">开始探索</button>
+                        <!-- https://ironnebula.netlify.app/ -->
+                    </div>
+                </div>
+                <div class="game-info">
+                    <h2 class="game-title">
+                        <span class="game-icon">☁️</span> 铁原子电子云
+                    </h2>
+                    <p class="game-description">
+                        探索铁原子的电子云分布！通过交互式3D可视化，观察铁原子不同能级的电子云形状、密度和空间分布，理解量子力学中的电子云概念。
+                    </p>
+                    <div class="game-tags">
+                        <span class="tag">电子云</span>
+                        <span class="tag">量子力学</span>
+                        <span class="tag">3D可视化</span>
+                        <span class="tag">铁原子</span>
+                        <span class="tag">交互式教学</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="add-game">
+            <h3 style="text-align: center; color: #ffd700; margin: 40px 0 20px;">更多游戏正在开发中...</h3>
+            <p style="text-align: center; color: #bbbbff; max-width: 600px; margin: 0 auto;">
+                计划中的游戏：化学方程式配平、分子模型搭建、元素周期表探险、化学反应模拟等。
+                欢迎提出你的创意！
+            </p>
+        </div>
+        
+        <!-- 微信登录弹出窗口 -->
+        <div id="wechatLoginModal" style="display: none; 
+                                          position: fixed; 
+                                          top: 0; 
+                                          left: 0; 
+                                          width: 100%; 
+                                          height: 100%; 
+                                          background: rgba(0, 0, 0, 0.8); 
+                                          z-index: 1000; 
+                                          align-items: center; 
+                                          justify-content: center;">
+            <div style="background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%); 
+                        padding: 40px; 
+                        border-radius: 15px; 
+                        text-align: center; 
+                        max-width: 400px; 
+                        width: 90%; 
+                        border: 2px solid #ffd700; 
+                        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);">
+                <h2 style="color: #ffd700; margin-bottom: 20px;">微信登录</h2>
+                
+                <!-- 模拟微信二维码 -->
+                <div style="background: white; 
+                            padding: 20px; 
+                            border-radius: 10px; 
+                            display: inline-block; 
+                            margin: 20px 0;">
+                    <div style="width: 200px; 
+                                height: 200px; 
+                                background: linear-gradient(45deg, #f0f0f0, #e0e0e0); 
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: center; 
+                                border: 1px dashed #ccc;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 3rem; color: #09bb07;">💬</div>
+                            <p style="color: #666; margin-top: 10px; font-size: 0.9rem;">微信扫描二维码</p>
+                            <p style="color: #999; font-size: 0.8rem;">或点击下方按钮</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p style="color: #bbbbff; margin: 20px 0;">
+                    使用微信扫描二维码登录<br>
+                    或在手机上点击授权登录
+                </p>
+                
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="simulateLogin()" 
+                            style="padding: 10px 30px; 
+                                   background: linear-gradient(45deg, #09bb07, #07a506); 
+                                   color: white; 
+                                   border: none; 
+                                   border-radius: 20px; 
+                                   font-size: 1rem; 
+                                   cursor: pointer;">
+                        模拟登录
+                    </button>
+                    <button onclick="hideWechatLogin()" 
+                            style="padding: 10px 30px; 
+                                   background: transparent; 
+                                   color: #bbbbff; 
+                                   border: 1px solid #bbbbff; 
+                                   border-radius: 20px; 
+                                   font-size: 1rem; 
+                                   cursor: pointer;">
+                        取消
+                    </button>
+                </div>
+                
+                <p style="margin-top: 20px; color: #8888cc; font-size: 0.8rem;">
+                    登录后可以保存您的游戏进度和学习记录
+                </p>
+            </div>
+        </div>
+        
+        <!-- 登录成功提示 -->
+        <div id="loginSuccess" style="display: none; 
+                                      position: fixed; 
+                                      top: 20px; 
+                                      right: 20px; 
+                                      background: rgba(9, 187, 7, 0.9); 
+                                      color: white; 
+                                      padding: 15px 25px; 
+                                      border-radius: 10px; 
+                                      z-index: 1001;">
+            <span style="font-weight: bold;">✓</span> 登录成功！欢迎回来！
+        </div>
+        
+        <footer>
+            <p>© 2024 WONG的化学游戏中心 | 通过游戏让化学学习更有趣！</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                所有游戏均基于HTML5/CSS3/JavaScript开发，无需安装插件
+            </p>
+            <p style="margin-top: 10px; font-size: 0.8rem; color: #6666cc;">
+                注：部分游戏可能需要VPN访问，请根据提示选择合适版本
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        // 添加一些交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 卡片进入动画
+            const cards = document.querySelectorAll('.game-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+            
+            // 添加点击统计
+            document.querySelectorAll('.play-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 这里可以添加游戏启动统计
+                    console.log('游戏启动');
+                });
+            });
+        });
+        
+        // 显示微信登录窗口
+        function showWechatLogin() {
+            document.getElementById('wechatLoginModal').style.display = 'flex';
+        }
+        
+        // 隐藏微信登录窗口
+        function hideWechatLogin() {
+            document.getElementById('wechatLoginModal').style.display = 'none';
+        }
+        
+        // 模拟登录功能
+        function simulateLogin() {
+            // 隐藏登录窗口
+            hideWechatLogin();
+            
+            // 显示成功提示
+            const successMsg = document.getElementById('loginSuccess');
+            successMsg.style.display = 'block';
+            
+            // 3秒后隐藏成功提示
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+            
+            // 更新页面上的登录状态
+            updateLoginStatus(true);
+            
+            // 可以在这里添加实际的登录逻辑
+            console.log('用户已登录');
+        }
+        
+        // 更新登录状态
+        function updateLoginStatus(isLoggedIn) {
+            const loginBtn = document.querySelector('button[onclick="showWechatLogin()"]');
+            const header = document.querySelector('header');
+            
+            if (isLoggedIn) {
+                // 更改按钮为已登录状态
+                if (loginBtn) {
+                    loginBtn.innerHTML = '<span style="font-size: 1.2rem;">👤</span> 已登录';
+                    loginBtn.style.background = 'linear-gradient(45deg, #666, #444)';
+                    loginBtn.onclick = function() {
+                        showUserMenu();
+                    };
+                }
+                
+                // 在标题旁显示用户信息
+                const userInfo = document.createElement('div');
+                userInfo.innerHTML = `
+                    <div style="position: absolute; top: 20px; right: 20px; text-align: right;">
+                        <p style="color: #ffd700; font-size: 0.9rem;">👤 老奶奶用户</p>
+                        <p style="color: #bbbbff; font-size: 0.8rem;">学习进度: 60%</p>
+                    </div>
+                `;
+                header.style.position = 'relative';
+                if (!document.querySelector('.user-info')) {
+                    userInfo.className = 'user-info';
+                    header.appendChild(userInfo);
+                }
+            }
+        }
+        
+        // 显示用户菜单
+        function showUserMenu() {
+            alert('用户菜单：\n• 查看学习进度\n• 获得的徽章\n• 设置\n• 退出登录');
+        }
+        
+        // 点击模态框外部关闭
+        document.getElementById('wechatLoginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideWechatLogin();
+            }
+        });
+    </script>
+</body>
+</html>
