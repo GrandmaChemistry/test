@@ -97,7 +97,7 @@
         /* 登录按钮样式 */
         .login-btn {
             padding: 12px 35px;
-            background: linear-gradient(45deg, #09bb07, #07a506);
+            background: linear-gradient(45deg, #2196F3, #1976D2);
             color: white;
             border: none;
             border-radius: 25px;
@@ -106,13 +106,13 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 15px rgba(9, 187, 7, 0.3);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
             transition: all 0.3s ease;
         }
         
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(9, 187, 7, 0.4);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
         }
         
         .login-btn:disabled {
@@ -272,12 +272,12 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: linear-gradient(45deg, #09bb07, #07a506);
+            background: linear-gradient(45deg, #2196F3, #1976D2);
             color: white;
             padding: 15px 25px;
             border-radius: 10px;
             z-index: 1001;
-            box-shadow: 0 5px 20px rgba(9, 187, 7, 0.4);
+            box-shadow: 0 5px 20px rgba(33, 150, 243, 0.4);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -488,14 +488,14 @@
         </footer>
     </div>
 
-    <!-- 4. JavaScript 代码 - 已配置好您的 App ID 和域名 -->
+    <!-- 4. JavaScript 代码 - 已配置好您的 App ID 和域名，并采用通用登录 -->
     <script>
     // ==================== 配置信息 (已填写好!) ====================
     const AUTHING_CONFIG = {
         appId: "695f0afe3f11be56dbcfe03b",  // 您的 App ID
         host: "https://wong.authing.cn",     // 您的域名
         redirectUri: window.location.origin, // 自动获取当前网站地址
-        scope: "openid profile"
+        scope: "openid profile email phone"
     };
     
     // ==================== 全局变量 ====================
@@ -539,28 +539,28 @@
         showLoginButton();
     }
     
-    // ==================== 显示登录按钮 ====================
+    // ==================== 显示登录按钮 (手机号/邮箱登录) ====================
     function showLoginButton() {
         const container = document.getElementById('login-container');
         container.innerHTML = `
             <div style="text-align: center;">
-                <button id="wechat-login-btn" class="login-btn">
-                    <span style="font-size: 1.4rem;">💬</span>
-                    <span>微信登录</span>
+                <button id="auth-login-btn" class="login-btn">
+                    <span style="font-size: 1.4rem;">🔐</span>
+                    <span>登录 / 注册</span>
                 </button>
                 <p style="margin-top: 10px; color: #bbbbff; font-size: 0.9rem;">
-                    登录后保存游戏进度，解锁学习徽章！
+                    使用手机号、邮箱或账号密码登录
                 </p>
                 <p style="margin-top: 5px; color: #8888cc; font-size: 0.8rem;">
-                    使用 Authing 安全认证
+                    登录后可保存游戏进度，解锁学习徽章
                 </p>
             </div>
         `;
         
         // 绑定登录按钮事件
-        const loginBtn = document.getElementById('wechat-login-btn');
+        const loginBtn = document.getElementById('auth-login-btn');
         if (loginBtn) {
-            loginBtn.addEventListener('click', handleWechatLogin);
+            loginBtn.addEventListener('click', handleAuthLogin);
         }
     }
     
@@ -577,9 +577,9 @@
                 <div class="user-header">
                     <div class="user-avatar">${currentUser.photo ? 
                         `<img src="${currentUser.photo}" style="width: 40px; height: 40px; border-radius: 50%;">` : 
-                        '👵'}</div>
+                        '👤'}</div>
                     <div>
-                        <div class="user-name">${currentUser.nickname || '化学探索者'}</div>
+                        <div class="user-name">${currentUser.nickname || currentUser.email || currentUser.phone || '化学探索者'}</div>
                         <div class="user-stats">
                             <span>🎮 游戏进度: 3/6</span>
                             <span style="margin-left: 15px;">⭐ 获得徽章: 2</span>
@@ -593,36 +593,36 @@
         `;
     }
     
-    // ==================== 处理微信登录 ====================
-    async function handleWechatLogin() {
+    // ==================== 处理登录 (弹出通用登录框) ====================
+    async function handleAuthLogin() {
         if (!authing) {
             alert('登录服务准备中，请稍候重试');
             return;
         }
         
-        const btn = document.getElementById('wechat-login-btn');
+        const btn = document.getElementById('auth-login-btn');
         if (btn) {
-            btn.innerHTML = '<span>正在连接...</span>';
+            btn.innerHTML = '<span>正在加载登录窗口...</span>';
             btn.disabled = true;
         }
         
         try {
-            // 跳转到微信登录授权页面
-            await authing.social.authorize('wechat', {
-                onSuccess: (user) => {
-                    console.log('登录成功:', user);
-                    handleLoginSuccess(user);
-                },
-                onError: (error) => {
-                    console.error('登录失败:', error);
-                    alert('微信登录失败，您可以先使用演示模式体验');
-                    showDemoLogin();
-                }
-            });
+            // 弹出 Authing 通用登录框（支持手机号、邮箱、密码等）
+            const user = await authing.loginWithPopup();
+            console.log('登录成功:', user);
+            handleLoginSuccess(user);
+            
         } catch (error) {
-            console.error('登录过程出错:', error);
-            alert('登录过程出错，请检查网络或使用演示模式');
-            showDemoLogin();
+            console.error('登录失败或取消:', error);
+            // 如果用户只是关闭了弹窗，不显示错误提示
+            if (error.message !== 'user closed popup') {
+                alert('登录失败: ' + (error.message || '请重试'));
+            }
+            // 重置按钮状态
+            if (btn) {
+                btn.innerHTML = '<span style="font-size: 1.4rem;">🔐</span><span>登录 / 注册</span>';
+                btn.disabled = false;
+            }
         }
     }
     
@@ -630,8 +630,10 @@
     function handleLoginSuccess(user) {
         // 保存用户信息
         currentUser = {
-            id: user.id || user.openid || ('user_' + Date.now()),
-            nickname: user.nickname || '化学爱好者',
+            id: user.id || ('user_' + Date.now()),
+            nickname: user.nickname,
+            email: user.email,
+            phone: user.phone,
             photo: user.photo || user.avatar || '',
             loginTime: new Date().toLocaleString()
         };
@@ -645,7 +647,7 @@
         // 显示欢迎消息
         showWelcomeMessage();
         
-        console.log('🎉 用户登录成功:', currentUser.nickname);
+        console.log('🎉 用户登录成功:', currentUser.nickname || currentUser.email || currentUser.phone);
     }
     
     // ==================== 显示欢迎消息 ====================
@@ -656,11 +658,13 @@
         
         const welcomeMsg = document.createElement('div');
         welcomeMsg.className = 'welcome-message';
+        
+        const userName = currentUser.nickname || currentUser.email || currentUser.phone || '化学爱好者';
         welcomeMsg.innerHTML = `
             <span style="font-size: 1.5rem;">🎉</span>
             <div>
-                <div style="font-weight: bold;">欢迎回来！</div>
-                <div style="font-size: 0.9rem;">${currentUser.nickname}，继续您的化学探索之旅吧！</div>
+                <div style="font-weight: bold;">欢迎${currentUser.nickname ? '回来' : ''}！</div>
+                <div style="font-size: 0.9rem;">${userName}，继续您的化学探索之旅吧！</div>
             </div>
         `;
         
@@ -723,10 +727,10 @@
                     <span>体验演示模式</span>
                 </button>
                 <p style="margin-top: 10px; color: #ff9800; font-size: 0.9rem;">
-                    演示模式下数据保存在本机，更换设备会丢失哦
+                    演示模式下数据保存在本机
                 </p>
                 <p style="margin-top: 5px; color: #8888cc; font-size: 0.8rem;">
-                    配置微信登录后体验完整功能
+                    Authing服务异常，使用本地演示
                 </p>
             </div>
         `;
@@ -736,6 +740,7 @@
         currentUser = {
             id: 'demo_user_' + Math.random().toString(36).substr(2, 9),
             nickname: '化学奶奶（演示）',
+            email: 'demo@chemistry.com',
             photo: '',
             loginTime: new Date().toLocaleString()
         };
@@ -743,7 +748,7 @@
         localStorage.setItem('chem_game_user', JSON.stringify(currentUser));
         showUserPanel();
         showWelcomeMessage();
-        alert('演示模式登录成功！\n要使用微信登录，请确保已正确配置Authing回调地址。');
+        alert('演示模式登录成功！\n实际数据保存在您的浏览器中。');
     }
     
     // ==================== 错误状态显示 ====================
@@ -777,7 +782,7 @@
         document.querySelectorAll('.play-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 if (currentUser) {
-                    console.log(`用户 ${currentUser.nickname} 启动了游戏`);
+                    console.log(`用户 ${currentUser.nickname || currentUser.email} 启动了游戏`);
                     // 这里可以添加游戏统计代码
                 }
             });
